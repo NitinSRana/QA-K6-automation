@@ -1,7 +1,15 @@
 const Groq = require('groq-sdk');
 const logger = require('../utils/logger');
 
-const client = new Groq({ apiKey: process.env.GROQ_API_KEY });
+// Lazy-initialize so module load doesn't crash if GROQ_API_KEY is absent
+let _client = null;
+function getClient() {
+  if (!_client) {
+    if (!process.env.GROQ_API_KEY) throw new Error('GROQ_API_KEY environment variable is not set');
+    _client = new Groq({ apiKey: process.env.GROQ_API_KEY });
+  }
+  return _client;
+}
 
 // llama-3.3-70b-versatile: best balance of speed + code quality on Groq
 const MODEL = 'llama-3.3-70b-versatile';
@@ -68,7 +76,7 @@ Rules:
 async function analyzeTestCases(rawContent) {
   logger.info('Analyzing test cases with Groq AI...');
 
-  const response = await client.chat.completions.create({
+  const response = await getClient().chat.completions.create({
     model: MODEL,
     max_tokens: 4096,
     temperature: 0.1,
@@ -98,7 +106,7 @@ async function generateK6Script(testCases, options = {}) {
   const { scriptName = 'generated_test', baseUrl = '', scenarioType = 'ramping-vus' } = options;
   logger.info(`Generating K6 script for ${testCases.length} test case(s)...`);
 
-  const response = await client.chat.completions.create({
+  const response = await getClient().chat.completions.create({
     model: MODEL,
     max_tokens: 8192,
     temperature: 0.1,
@@ -124,7 +132,7 @@ async function generateK6ScriptStream(testCases, options = {}, onChunk) {
   const { scriptName = 'generated_test', baseUrl = '', scenarioType = 'ramping-vus' } = options;
   logger.info(`Streaming K6 script generation for ${testCases.length} test case(s) via Groq...`);
 
-  const stream = await client.chat.completions.create({
+  const stream = await getClient().chat.completions.create({
     model: MODEL,
     max_tokens: 8192,
     temperature: 0.1,
