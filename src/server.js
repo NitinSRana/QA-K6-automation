@@ -12,11 +12,13 @@ const executeRoutes = require('./routes/execute');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Ensure required directories exist
-['uploads', 'scripts/generated'].forEach(dir => {
-  const full = path.join(process.cwd(), dir);
-  if (!fs.existsSync(full)) fs.mkdirSync(full, { recursive: true });
-});
+// Ensure required directories exist (skip on Vercel — ephemeral/read-only filesystem)
+if (!process.env.VERCEL) {
+  ['uploads', 'scripts/generated'].forEach(dir => {
+    const full = path.join(process.cwd(), dir);
+    if (!fs.existsSync(full)) fs.mkdirSync(full, { recursive: true });
+  });
+}
 
 app.use(cors());
 app.use(express.json({ limit: '10mb' }));
@@ -29,12 +31,15 @@ app.use('/api/execute', executeRoutes);
 
 app.get('/health', (req, res) => {
   const { USE_K6_BINARY } = require('./services/k6Runner');
+  const isVercel = !!process.env.VERCEL;
   res.json({
     status: 'ok',
     time: new Date().toISOString(),
     ai: process.env.GROQ_API_KEY ? 'groq' : 'not configured',
-    k6: USE_K6_BINARY ? 'binary' : 'docker',
+    k6: isVercel ? 'unavailable (serverless)' : USE_K6_BINARY ? 'binary' : 'docker',
+    k6Available: !isVercel,
     influxdb: process.env.INFLUXDB_URL || 'not configured',
+    environment: isVercel ? 'vercel' : 'local',
   });
 });
 
@@ -43,7 +48,13 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
-app.listen(PORT, () => {
-  console.log(`AI K6 Platform running on http://localhost:${PORT}`);
-  console.log(`Grafana dashboard: http://localhost:${process.env.GRAFANA_PORT || 3001}`);
-});
+// Export for Vercel serverless
+module.exports = app;
+
+// Start server when run directly (not on Vercel)
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`AI K6 Platform running on http://localhost:${PORT}`);
+    console.log(`Grafana dashboard: http://localhost:${process.env.GRAFANA_PORT || 3001}`);
+  });
+}

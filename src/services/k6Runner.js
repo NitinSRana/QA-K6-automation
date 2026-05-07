@@ -1,8 +1,24 @@
-const { spawn, execSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const logger = require('../utils/logger');
+
+const IS_VERCEL = !!process.env.VERCEL;
+
+// On Vercel, K6 execution is not available — no subprocess spawning in serverless
+if (IS_VERCEL) {
+  logger.info('K6 runner mode: unavailable (Vercel serverless environment)');
+  module.exports = {
+    startRun: () => { throw new Error('K6 execution is not available on Vercel. Download the script and run it locally.'); },
+    getRun: () => null,
+    listRuns: () => [],
+    subscribe: () => null,
+    USE_K6_BINARY: false,
+  };
+  return;
+}
+
+const { spawn, execSync } = require('child_process');
 
 const K6_IMAGE = process.env.K6_DOCKER_IMAGE || 'grafana/k6:latest';
 const INFLUXDB_URL = process.env.INFLUXDB_URL || '';

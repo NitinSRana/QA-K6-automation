@@ -3,8 +3,8 @@ const fs = require('fs');
 const path = require('path');
 
 /**
- * Parse uploaded file and return raw text content representing test cases.
- * Supports .txt, .csv, .xlsx, .xls, .json
+ * Parse a file at a given path and return raw text representing test cases.
+ * Supports .txt, .md, .csv, .xlsx, .xls, .json
  */
 function parseFile(filePath) {
   const ext = path.extname(filePath).toLowerCase();
@@ -18,22 +18,44 @@ function parseFile(filePath) {
     return JSON.stringify(raw, null, 2);
   }
 
-  if (ext === '.csv') {
-    return parseCsvOrExcel(filePath, true);
-  }
-
-  if (ext === '.xlsx' || ext === '.xls') {
-    return parseCsvOrExcel(filePath, false);
+  if (ext === '.csv' || ext === '.xlsx' || ext === '.xls') {
+    return parseCsvOrExcelFromPath(filePath);
   }
 
   throw new Error(`Unsupported file type: ${ext}`);
 }
 
-function parseCsvOrExcel(filePath, isCsv) {
-  const workbook = isCsv
-    ? XLSX.readFile(filePath, { type: 'file', raw: false })
-    : XLSX.readFile(filePath);
+/**
+ * Parse a Buffer (from multer memoryStorage) given a file extension.
+ */
+function parseBuffer(buffer, ext) {
+  if (ext === '.txt' || ext === '.md') {
+    return buffer.toString('utf-8');
+  }
 
+  if (ext === '.json') {
+    const raw = JSON.parse(buffer.toString('utf-8'));
+    return JSON.stringify(raw, null, 2);
+  }
+
+  if (ext === '.csv' || ext === '.xlsx' || ext === '.xls') {
+    return parseCsvOrExcelFromBuffer(buffer);
+  }
+
+  throw new Error(`Unsupported file type: ${ext}`);
+}
+
+function parseCsvOrExcelFromPath(filePath) {
+  const workbook = XLSX.readFile(filePath);
+  return sheetsToText(workbook);
+}
+
+function parseCsvOrExcelFromBuffer(buffer) {
+  const workbook = XLSX.read(buffer, { type: 'buffer' });
+  return sheetsToText(workbook);
+}
+
+function sheetsToText(workbook) {
   const lines = [];
 
   workbook.SheetNames.forEach(sheetName => {
@@ -56,4 +78,4 @@ function parseCsvOrExcel(filePath, isCsv) {
   return lines.join('\n');
 }
 
-module.exports = { parseFile };
+module.exports = { parseFile, parseBuffer };

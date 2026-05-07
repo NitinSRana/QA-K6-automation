@@ -387,12 +387,28 @@
             <span id="scriptId" class="badge badge-gray"></span>
           </div>
           <textarea id="scriptEditor" class="code-editor" spellcheck="false"></textarea>
-          <div class="actions">
+          <!-- Local execution panel (hidden on Vercel) -->
+          <div class="actions" id="executeActions">
             <div class="form-group inline">
               <label>Base URL</label>
               <input type="text" id="executeBaseUrl" placeholder="https://api.myapp.com" />
             </div>
             <button class="btn btn-primary btn-large" id="executeBtn">🚀 Run K6 Test</button>
+          </div>
+
+          <!-- Vercel / serverless download panel -->
+          <div id="downloadRunPanel" class="hidden">
+            <div class="vercel-notice">
+              <div class="vercel-notice-icon">☁</div>
+              <div>
+                <strong>Running on Vercel</strong> — K6 execution requires a local environment.
+                Download your script and run it with:
+                <code>k6 run &lt;script.js&gt;</code>
+              </div>
+            </div>
+            <div class="actions">
+              <button class="btn btn-primary btn-large" id="downloadRunBtn">⬇ Download Script</button>
+            </div>
           </div>
         </div>
       </div>
@@ -416,6 +432,20 @@
       </div>
 
       <div class="card">
+        <!-- Shown only when k6 is not available (Vercel) -->
+        <div id="noK6Notice" class="hidden">
+          <div class="vercel-notice">
+            <div class="vercel-notice-icon">☁</div>
+            <div>
+              <strong>K6 execution is not available in this environment.</strong><br>
+              Go to the <strong>Script</strong> tab, download your generated script, and run it locally:<br>
+              <code>k6 run script.js</code><br><br>
+              For real-time metrics, pair with InfluxDB + Grafana:<br>
+              <code>k6 run --out influxdb=http://localhost:8086/k6 script.js</code>
+            </div>
+          </div>
+        </div>
+
         <div id="runMeta" class="hidden">
           <div class="run-info">
             <span id="runScriptName" class="badge badge-blue"></span>

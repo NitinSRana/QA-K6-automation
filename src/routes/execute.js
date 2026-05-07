@@ -8,6 +8,14 @@ const router = express.Router();
 
 // POST /api/execute — start a K6 run
 router.post('/', (req, res) => {
+  if (process.env.VERCEL) {
+    return res.status(503).json({
+      error: 'K6 execution is not available on Vercel.',
+      hint: 'Download the script and run it locally: k6 run <script.js>',
+      vercel: true,
+    });
+  }
+
   const { scriptId, baseUrl, envOverrides } = req.body;
   if (!scriptId) return res.status(400).json({ error: 'scriptId is required' });
 

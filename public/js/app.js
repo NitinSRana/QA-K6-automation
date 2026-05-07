@@ -4,9 +4,31 @@ const state = {
   testCases: [],
   currentScriptId: null,
   currentRunId: null,
+  k6Available: true, // updated after /health check
   uploads: JSON.parse(localStorage.getItem('k6_uploads') || '[]'),
   stats: JSON.parse(localStorage.getItem('k6_stats') || '{"uploads":0,"testCases":0,"scripts":0,"runs":0}'),
 };
+
+/* ===== Environment Detection ===== */
+async function initEnvironment() {
+  try {
+    const res = await fetch('/health');
+    const data = await res.json();
+    state.k6Available = data.k6Available !== false;
+  } catch {
+    state.k6Available = true; // assume local if health check fails
+  }
+
+  if (!state.k6Available) {
+    // Show download-run panel instead of execute panel in Script tab
+    document.getElementById('executeActions')?.classList.add('hidden');
+    document.getElementById('downloadRunPanel')?.classList.remove('hidden');
+    // Show notice in Execute tab
+    document.getElementById('noK6Notice')?.classList.remove('hidden');
+    document.getElementById('logOutput').textContent = 'K6 execution is not available. Download your script and run it locally.';
+  }
+}
+initEnvironment();
 
 /* ===== Sidebar Navigation ===== */
 document.querySelectorAll('.nav-item').forEach(item => {
@@ -470,6 +492,19 @@ async function runScript(id) {
 document.getElementById('executeBtn').addEventListener('click', () => {
   if (state.currentScriptId) executeScript(state.currentScriptId);
 });
+
+document.getElementById('downloadRunBtn')?.addEventListener('click', () => {
+  if (state.currentScriptId) downloadScript(state.currentScriptId);
+});
+
+function downloadScript(scriptId) {
+  const a = document.createElement('a');
+  a.href = `/api/scripts/${scriptId}/download`;
+  a.download = '';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+}
 
 async function executeScript(scriptId) {
   const baseUrl = document.getElementById('executeBaseUrl').value;
