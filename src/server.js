@@ -44,8 +44,16 @@ app.get('/health', (req, res) => {
 });
 
 // Serve frontend for all non-API routes
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../public/index.html'));
+app.get('*', (req, res, next) => {
+  res.sendFile(path.join(__dirname, '../public/index.html'), err => {
+    if (err) next(err);
+  });
+});
+
+// Global error handler — must be last
+app.use((err, req, res, _next) => {
+  console.error('Express error:', err.message);
+  res.status(500).json({ error: err.message });
 });
 
 // Export for Vercel serverless
