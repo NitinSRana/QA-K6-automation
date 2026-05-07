@@ -1,7 +1,13 @@
 const Anthropic = require('@anthropic-ai/sdk');
 const logger = require('../utils/logger');
 
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+// When running inside Claude Code's environment, ANTHROPIC_BASE_URL is set to
+// a local proxy that handles auth. The SDK still requires apiKey to be non-empty,
+// so use a placeholder if no real key is configured.
+const client = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY || 'proxy-handled',
+  ...(process.env.ANTHROPIC_BASE_URL ? { baseURL: process.env.ANTHROPIC_BASE_URL } : {}),
+});
 const MODEL = 'claude-sonnet-4-6';
 
 /**

@@ -1,6 +1,7 @@
 const express = require('express');
 const { startRun, getRun, listRuns, subscribe } = require('../services/k6Runner');
 const { getScript } = require('../services/scriptStore');
+const { parseK6Results } = require('../services/resultsParser');
 const logger = require('../utils/logger');
 
 const router = express.Router();
@@ -20,6 +21,8 @@ router.post('/', (req, res) => {
       status: run.status,
       scriptName: run.scriptName,
       startedAt: run.startedAt,
+      dashboardUrl: run.dashboardUrl,
+      mode: run.mode,
     });
   } catch (err) {
     logger.error('Execute error:', err.message);
@@ -38,6 +41,15 @@ router.get('/:runId', (req, res) => {
   if (!run) return res.status(404).json({ error: 'Run not found' });
   const { subscribers, ...safe } = run;
   res.json(safe);
+});
+
+// GET /api/execute/:runId/results — parsed metrics summary
+router.get('/:runId/results', (req, res) => {
+  const run = getRun(req.params.runId);
+  if (!run) return res.status(404).json({ error: 'Run not found' });
+  if (run.status === 'running') return res.status(202).json({ message: 'Run still in progress' });
+  const summary = run.jsonOut ? parseK6Results(run.jsonOut) : null;
+  res.json({ runId: run.id, status: run.status, dashboardUrl: run.dashboardUrl, summary });
 });
 
 // GET /api/execute/:runId/stream — SSE log stream

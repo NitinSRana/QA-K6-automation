@@ -30,10 +30,20 @@ const runs = new Map();
  * Build the spawn command + args for k6.
  * Returns { cmd, args, env }.
  */
-function buildCommand(scriptPath, envOverrides = {}) {
-  const outputArgs = INFLUXDB_URL
-    ? ['--out', `influxdb=${INFLUXDB_URL}/${INFLUXDB_DB}`]
-    : [];
+const RESULTS_DIR = path.join(process.cwd(), 'scripts', 'results');
+if (!fs.existsSync(RESULTS_DIR)) fs.mkdirSync(RESULTS_DIR, { recursive: true });
+
+function buildCommand(scriptPath, envOverrides = {}, runId) {
+  const outputArgs = [];
+
+  // InfluxDB output (when available)
+  if (INFLUXDB_URL) {
+    outputArgs.push('--out', `influxdb=${INFLUXDB_URL}/${INFLUXDB_DB}`);
+  }
+
+  // Always write JSON summary for result parsing
+  const jsonOut = path.join(RESULTS_DIR, `${runId}.json`);
+  outputArgs.push('--out', `json=${jsonOut}`);
 
   const extraEnv = {
     ...(envOverrides.baseUrl ? { BASE_URL: envOverrides.baseUrl } : {}),
@@ -45,6 +55,7 @@ function buildCommand(scriptPath, envOverrides = {}) {
       cmd: 'k6',
       args: ['run', ...outputArgs, scriptPath],
       env: { ...process.env, ...extraEnv },
+      jsonOut,
     };
   }
 
@@ -68,6 +79,7 @@ function buildCommand(scriptPath, envOverrides = {}) {
       `/scripts/${scriptFilename}`,
     ],
     env: process.env,
+    jsonOut,
   };
 }
 
@@ -98,7 +110,10 @@ function startRun(scriptMeta, envOverrides = {}) {
 
   runs.set(runId, run);
 
-  const { cmd, args, env } = buildCommand(scriptPath, envOverrides);
+  const { cmd, args, env, jsonOut } = buildCommand(scriptPath, envOverrides, runId);
+  run.jsonOut = jsonOut;
+  run.dashboardUrl = null;
+  run.reportPath = path.join(RESULTS_DIR, `${runId}_report.html`);
   logger.info(`Starting K6 run ${runId} [${run.mode}]: ${cmd} ${args.join(' ')}`);
 
   const proc = spawn(cmd, args, { stdio: ['ignore', 'pipe', 'pipe'], env });
