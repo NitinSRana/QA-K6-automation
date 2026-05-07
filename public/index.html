@@ -47,6 +47,12 @@
         <span class="nav-icon">🕐</span>
         <span class="nav-label">History</span>
       </button>
+      <div class="nav-divider"></div>
+      <button class="nav-item" data-tab="settings" id="settingsNavBtn">
+        <span class="nav-icon">⚙</span>
+        <span class="nav-label">Settings</span>
+        <span class="nav-key-dot hidden" id="keyMissingDot" title="API key not set">●</span>
+      </button>
     </nav>
 
     <a class="sidebar-grafana" href="http://localhost:3001" target="_blank">
@@ -58,6 +64,12 @@
 
   <!-- ===== MAIN CONTENT ===== -->
   <div class="app-layout">
+
+    <!-- API Key Banner (shown when key is missing) -->
+    <div id="noKeyBanner" class="api-key-banner hidden">
+      <span>⚠ Groq API key not configured — AI analysis and script generation won't work.</span>
+      <button class="api-key-banner-btn" onclick="switchTab('settings')">Add API Key →</button>
+    </div>
 
     <!-- ====== PAGE: UPLOAD DASHBOARD ====== -->
     <section id="tab-upload" class="tab-content active">
@@ -474,6 +486,60 @@
           <p class="empty-state">No runs yet.</p>
         </div>
       </div>
+    </section>
+
+    <!-- ====== TAB: SETTINGS ====== -->
+    <section id="tab-settings" class="tab-content">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Settings</h1>
+          <p class="page-subtitle">Configure your API keys and preferences</p>
+        </div>
+      </div>
+
+      <div class="card settings-card">
+        <div class="settings-section">
+          <div class="settings-section-header">
+            <div class="settings-icon">🤖</div>
+            <div>
+              <h3 class="settings-title">Groq API Key</h3>
+              <p class="settings-desc">
+                Required for AI-powered test case analysis and K6 script generation.
+                Get your free key at <a href="https://console.groq.com" target="_blank" rel="noopener">console.groq.com</a>.
+              </p>
+            </div>
+          </div>
+
+          <div id="keyStatus" class="key-status hidden"></div>
+
+          <div class="key-input-group">
+            <div class="key-input-row">
+              <div class="key-input-wrap">
+                <input
+                  type="password"
+                  id="groqKeyInput"
+                  class="key-input"
+                  placeholder="gsk_••••••••••••••••••••••••••••••••"
+                  autocomplete="off"
+                  spellcheck="false"
+                />
+                <button class="key-toggle-btn" id="keyToggleBtn" title="Show / hide key">👁</button>
+              </div>
+              <button class="btn btn-primary" id="saveKeyBtn">Save Key</button>
+              <button class="btn btn-sm btn-danger" id="clearKeyBtn">Clear</button>
+            </div>
+            <p class="key-hint">
+              The key is stored only in your browser's localStorage and is never sent anywhere except directly to Groq's API.
+            </p>
+          </div>
+
+          <div class="key-model-info">
+            <span class="badge badge-blue">Model: llama-3.3-70b-versatile</span>
+            <span class="badge badge-gray">Provider: Groq</span>
+          </div>
+        </div>
+      </div>
+
     </section>
 
   </div><!-- /app-layout -->

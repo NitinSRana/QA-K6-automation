@@ -816,6 +816,99 @@ select option { background: var(--bg3); }
 .empty-state { color: var(--text-muted); font-size: 13px; padding: 16px 0; }
 .empty-state-sm { color: var(--text-dim); font-size: 12px; padding: 16px; text-align: center; }
 
+/* ===== API KEY BANNER ===== */
+.api-key-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: rgba(251,191,36,0.08);
+  border: 1px solid rgba(251,191,36,0.3);
+  border-radius: var(--radius-sm);
+  padding: 10px 16px;
+  margin-bottom: 18px;
+  font-size: 13px;
+  color: #fbbf24;
+}
+.api-key-banner-btn {
+  background: rgba(251,191,36,0.15);
+  border: 1px solid rgba(251,191,36,0.4);
+  color: #fbbf24;
+  border-radius: var(--radius-sm);
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+.api-key-banner-btn:hover { background: rgba(251,191,36,0.25); }
+
+/* dot on Settings nav item */
+.nav-key-dot {
+  font-size: 10px;
+  color: #fbbf24;
+  margin-left: auto;
+  line-height: 1;
+}
+
+/* ===== SETTINGS TAB ===== */
+.settings-card { padding: 24px; }
+.settings-section { display: flex; flex-direction: column; gap: 16px; }
+.settings-section-header { display: flex; gap: 14px; align-items: flex-start; }
+.settings-icon { font-size: 24px; line-height: 1; margin-top: 2px; flex-shrink: 0; }
+.settings-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+.settings-desc { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+.settings-desc a { color: var(--accent); text-decoration: none; }
+.settings-desc a:hover { text-decoration: underline; }
+
+.key-input-group { display: flex; flex-direction: column; gap: 8px; }
+.key-input-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.key-input-wrap { position: relative; flex: 1; min-width: 260px; }
+.key-input {
+  width: 100%;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 9px 38px 9px 12px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.key-input:focus { border-color: var(--accent); }
+.key-toggle-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px;
+  color: var(--text-muted);
+}
+.key-hint { font-size: 12px; color: var(--text-dim); line-height: 1.5; }
+.key-model-info { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.key-status {
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  border: 1px solid transparent;
+}
+.key-status-success { background: rgba(74,222,128,0.08); border-color: rgba(74,222,128,0.25); color: var(--accent2); }
+.key-status-error   { background: rgba(248,113,113,0.08); border-color: rgba(248,113,113,0.25); color: var(--error); }
+.key-status-info    { background: rgba(124,106,245,0.08); border-color: rgba(124,106,245,0.2); color: var(--text-muted); }
+
+.btn-danger {
+  background: rgba(248,113,113,0.12);
+  border: 1px solid rgba(248,113,113,0.25);
+  color: #f87171;
+}
+.btn-danger:hover { background: rgba(248,113,113,0.2); }
+
 /* ===== VERCEL NOTICE ===== */
 .vercel-notice {
   display: flex;

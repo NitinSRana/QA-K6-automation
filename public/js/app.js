@@ -9,6 +9,25 @@ const state = {
   stats: JSON.parse(localStorage.getItem('k6_stats') || '{"uploads":0,"testCases":0,"scripts":0,"runs":0}'),
 };
 
+/* ===== API Key Helpers ===== */
+function getApiKey() {
+  return localStorage.getItem('groq_api_key') || '';
+}
+
+function groqHeaders(extra = {}) {
+  const h = { 'Content-Type': 'application/json', ...extra };
+  const key = getApiKey();
+  if (key) h['X-Groq-Api-Key'] = key;
+  return h;
+}
+
+function updateKeyBanner() {
+  const hasKey = !!getApiKey() || false;
+  document.getElementById('noKeyBanner')?.classList.toggle('hidden', hasKey);
+  document.getElementById('keyMissingDot')?.classList.toggle('hidden', hasKey);
+}
+updateKeyBanner();
+
 /* ===== Environment Detection ===== */
 async function initEnvironment() {
   try {
@@ -263,7 +282,7 @@ async function analyzeContent(content) {
   try {
     const res = await fetch('/api/analyze', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: groqHeaders(),
       body: JSON.stringify({ content }),
     });
     const data = await res.json();
@@ -348,7 +367,7 @@ async function generateScript() {
   try {
     const res = await fetch('/api/analyze/generate', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: groqHeaders(),
       body: JSON.stringify({ testCases: state.testCases, scriptName, baseUrl, scenarioType }),
     });
 
@@ -629,6 +648,48 @@ function showError(id, msg) {
   if (msg) { el.textContent = msg; el.classList.remove('hidden'); }
   else { el.textContent = ''; el.classList.add('hidden'); }
 }
+
+/* ===== Settings — API Key Management ===== */
+(function initSettings() {
+  const input = document.getElementById('groqKeyInput');
+  const saveBtn = document.getElementById('saveKeyBtn');
+  const clearBtn = document.getElementById('clearKeyBtn');
+  const toggleBtn = document.getElementById('keyToggleBtn');
+  const statusEl = document.getElementById('keyStatus');
+
+  // Pre-fill input if key already saved
+  const existing = getApiKey();
+  if (existing) input.value = existing;
+
+  function showKeyStatus(type, msg) {
+    statusEl.className = `key-status key-status-${type}`;
+    statusEl.textContent = msg;
+    statusEl.classList.remove('hidden');
+    if (type === 'success') setTimeout(() => statusEl.classList.add('hidden'), 3000);
+  }
+
+  saveBtn.addEventListener('click', () => {
+    const val = input.value.trim();
+    if (!val) return showKeyStatus('error', 'Please paste your Groq API key first.');
+    if (!val.startsWith('gsk_')) return showKeyStatus('error', 'Key should start with "gsk_" — double-check you copied it correctly.');
+    localStorage.setItem('groq_api_key', val);
+    showKeyStatus('success', '✓ Key saved — AI features are now active.');
+    updateKeyBanner();
+  });
+
+  clearBtn.addEventListener('click', () => {
+    localStorage.removeItem('groq_api_key');
+    input.value = '';
+    showKeyStatus('info', 'Key cleared.');
+    updateKeyBanner();
+  });
+
+  toggleBtn.addEventListener('click', () => {
+    const isPassword = input.type === 'password';
+    input.type = isPassword ? 'text' : 'password';
+    toggleBtn.textContent = isPassword ? '🙈' : '👁';
+  });
+})();
 
 // Expose for inline onclick handlers
 window.loadScript = loadScript;

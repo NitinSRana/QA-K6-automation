@@ -10,8 +10,10 @@ router.post('/', async (req, res) => {
   const { content } = req.body;
   if (!content) return res.status(400).json({ error: 'content is required' });
 
+  const apiKey = req.headers['x-groq-api-key'] || '';
+
   try {
-    const testCases = await analyzeTestCases(content);
+    const testCases = await analyzeTestCases(content, apiKey);
     res.json({ testCases, count: testCases.length });
   } catch (err) {
     logger.error('Analyze error:', err.message);
@@ -26,6 +28,8 @@ router.post('/generate', async (req, res) => {
   if (!testCases || !Array.isArray(testCases) || testCases.length === 0) {
     return res.status(400).json({ error: 'testCases array is required' });
   }
+
+  const apiKey = req.headers['x-groq-api-key'] || '';
 
   // Set up SSE
   res.setHeader('Content-Type', 'text/event-stream');
@@ -45,9 +49,8 @@ router.post('/generate', async (req, res) => {
     fullScript = await generateK6ScriptStream(
       testCases,
       { scriptName: scriptName || 'ai_generated', baseUrl, scenarioType },
-      chunk => {
-        sendEvent('chunk', { text: chunk });
-      }
+      chunk => { sendEvent('chunk', { text: chunk }); },
+      apiKey
     );
 
     const meta = saveScript(scriptName || 'ai_generated', fullScript, {

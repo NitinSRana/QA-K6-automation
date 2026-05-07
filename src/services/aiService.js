@@ -1,14 +1,12 @@
 const Groq = require('groq-sdk');
 const logger = require('../utils/logger');
 
-// Lazy-initialize so module load doesn't crash if GROQ_API_KEY is absent
-let _client = null;
-function getClient() {
-  if (!_client) {
-    if (!process.env.GROQ_API_KEY) throw new Error('GROQ_API_KEY environment variable is not set');
-    _client = new Groq({ apiKey: process.env.GROQ_API_KEY });
-  }
-  return _client;
+// Create a Groq client using the provided key, or fall back to the env var.
+// Called per-request so a key pasted in the UI is always picked up.
+function getClient(apiKey) {
+  const key = apiKey || process.env.GROQ_API_KEY;
+  if (!key) throw new Error('Groq API key is not configured. Please add your key in the Settings tab.');
+  return new Groq({ apiKey: key });
 }
 
 // llama-3.3-70b-versatile: best balance of speed + code quality on Groq
@@ -73,10 +71,10 @@ Rules:
 /**
  * Analyze raw test case text and return structured array of test cases.
  */
-async function analyzeTestCases(rawContent) {
+async function analyzeTestCases(rawContent, apiKey) {
   logger.info('Analyzing test cases with Groq AI...');
 
-  const response = await getClient().chat.completions.create({
+  const response = await getClient(apiKey).chat.completions.create({
     model: MODEL,
     max_tokens: 4096,
     temperature: 0.1,
@@ -102,11 +100,11 @@ async function analyzeTestCases(rawContent) {
 /**
  * Generate a complete K6 script (non-streaming).
  */
-async function generateK6Script(testCases, options = {}) {
+async function generateK6Script(testCases, options = {}, apiKey) {
   const { scriptName = 'generated_test', baseUrl = '', scenarioType = 'ramping-vus' } = options;
   logger.info(`Generating K6 script for ${testCases.length} test case(s)...`);
 
-  const response = await getClient().chat.completions.create({
+  const response = await getClient(apiKey).chat.completions.create({
     model: MODEL,
     max_tokens: 8192,
     temperature: 0.1,
@@ -128,11 +126,11 @@ async function generateK6Script(testCases, options = {}) {
 /**
  * Generate a K6 script with streaming — yields text chunks via onChunk callback.
  */
-async function generateK6ScriptStream(testCases, options = {}, onChunk) {
+async function generateK6ScriptStream(testCases, options = {}, onChunk, apiKey) {
   const { scriptName = 'generated_test', baseUrl = '', scenarioType = 'ramping-vus' } = options;
   logger.info(`Streaming K6 script generation for ${testCases.length} test case(s) via Groq...`);
 
-  const stream = await getClient().chat.completions.create({
+  const stream = await getClient(apiKey).chat.completions.create({
     model: MODEL,
     max_tokens: 8192,
     temperature: 0.1,
