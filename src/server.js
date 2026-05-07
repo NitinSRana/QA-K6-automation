@@ -32,6 +32,7 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'ok',
     time: new Date().toISOString(),
+    ai: process.env.GROQ_API_KEY ? 'groq' : 'not configured',
     k6: USE_K6_BINARY ? 'binary' : 'docker',
     influxdb: process.env.INFLUXDB_URL || 'not configured',
   });
