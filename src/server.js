@@ -27,7 +27,15 @@ app.use('/api/analyze', analyzeRoutes);
 app.use('/api/scripts', scriptsRoutes);
 app.use('/api/execute', executeRoutes);
 
-app.get('/health', (req, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
+app.get('/health', (req, res) => {
+  const { USE_K6_BINARY } = require('./services/k6Runner');
+  res.json({
+    status: 'ok',
+    time: new Date().toISOString(),
+    k6: USE_K6_BINARY ? 'binary' : 'docker',
+    influxdb: process.env.INFLUXDB_URL || 'not configured',
+  });
+});
 
 // Serve frontend for all non-API routes
 app.get('*', (req, res) => {
