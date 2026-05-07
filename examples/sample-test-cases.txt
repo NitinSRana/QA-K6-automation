@@ -1,0 +1,49 @@
+Test Suite: E-Commerce API Load Tests
+
+Test Case 1: User Authentication
+- Test login with valid credentials
+- POST request to /api/auth/login
+- Request body: { "email": "user@example.com", "password": "password123" }
+- Expected response: 200 OK with a JWT token in the body
+- Assert: response time < 500ms, response contains "token"
+- Load profile: 50 virtual users, ramp up over 30s, run for 2 minutes
+
+Test Case 2: Get Product Catalog
+- Test fetching the product listing page
+- GET request to /api/products
+- Optional query parameters: ?page=1&limit=20&category=electronics
+- Expected response: 200 OK with array of products
+- Assert: response time < 800ms, response is JSON array
+- Load profile: 100 virtual users for 5 minutes
+
+Test Case 3: Get Product Details
+- Retrieve single product by ID
+- GET /api/products/{productId} where productId is a random ID between 1-1000
+- Expected: 200 OK with product details
+- Assert: response time < 300ms
+- Load: 200 users, 3 minutes
+
+Test Case 4: Add Item to Cart
+- Authenticated user adds a product to their shopping cart
+- POST /api/cart/items
+- Requires Bearer token from login
+- Body: { "productId": 42, "quantity": 1 }
+- Expected: 201 Created
+- Assert: response time < 600ms
+- Load: 30 users for 2 minutes
+
+Test Case 5: Checkout / Create Order
+- Submit a checkout with items in cart
+- POST /api/orders
+- Requires authentication
+- Body: { "cartId": "{{cartId}}", "paymentMethod": "card", "shippingAddress": {...} }
+- Expected: 201 with order confirmation and order ID
+- Response time < 2000ms (payment processing allowed more time)
+- Load: 10 users, 1 minute (lower load as checkout is business-critical)
+
+Test Case 6: Health Check
+- Simple health check endpoint, not a load test
+- GET /health
+- Expected: 200 OK
+- Assert: response time < 100ms
+- Note: this is a smoke test only, not for load testing
