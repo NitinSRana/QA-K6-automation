@@ -7,85 +7,314 @@
   <link rel="stylesheet" href="/css/style.css" />
 </head>
 <body>
-  <header>
-    <div class="header-inner">
-      <div class="logo">
-        <span class="logo-icon">⚡</span>
-        <div>
-          <span class="logo-title">AI K6 Platform</span>
-          <span class="logo-sub">Load Test Automation</span>
-        </div>
+
+  <!-- ===== SIDEBAR ===== -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <span class="sidebar-logo-icon">⚡</span>
+      <div>
+        <span class="sidebar-logo-title">K6 Platform</span>
+        <span class="sidebar-logo-sub">AI Load Testing</span>
       </div>
-      <nav class="tabs">
-        <button class="tab active" data-tab="upload">1. Upload</button>
-        <button class="tab" data-tab="analyze">2. Analyze</button>
-        <button class="tab" data-tab="script">3. Script</button>
-        <button class="tab" data-tab="execute">4. Execute</button>
-        <button class="tab" data-tab="history">History</button>
-      </nav>
-      <a class="grafana-link" href="http://localhost:3001" target="_blank">
-        📊 Grafana
-      </a>
     </div>
-  </header>
 
-  <main>
-    <!-- ====== TAB: UPLOAD ====== -->
+    <nav class="sidebar-nav">
+      <button class="nav-item active" data-tab="upload">
+        <span class="nav-icon">⬆</span>
+        <span class="nav-label">Upload</span>
+        <span class="nav-step">1</span>
+      </button>
+      <div class="nav-connector"></div>
+      <button class="nav-item" data-tab="analyze">
+        <span class="nav-icon">🤖</span>
+        <span class="nav-label">AI Analysis</span>
+        <span class="nav-step">2</span>
+      </button>
+      <div class="nav-connector"></div>
+      <button class="nav-item" data-tab="script">
+        <span class="nav-icon">📝</span>
+        <span class="nav-label">Script</span>
+        <span class="nav-step">3</span>
+      </button>
+      <div class="nav-connector"></div>
+      <button class="nav-item" data-tab="execute">
+        <span class="nav-icon">🚀</span>
+        <span class="nav-label">Execute</span>
+        <span class="nav-step">4</span>
+      </button>
+      <div class="nav-divider"></div>
+      <button class="nav-item" data-tab="history">
+        <span class="nav-icon">🕐</span>
+        <span class="nav-label">History</span>
+      </button>
+    </nav>
+
+    <a class="sidebar-grafana" href="http://localhost:3001" target="_blank">
+      <span>📊</span>
+      <span>Grafana</span>
+      <span class="ext-icon">↗</span>
+    </a>
+  </aside>
+
+  <!-- ===== MAIN CONTENT ===== -->
+  <div class="app-layout">
+
+    <!-- ====== PAGE: UPLOAD DASHBOARD ====== -->
     <section id="tab-upload" class="tab-content active">
-      <div class="card">
-        <h2>Upload Test Cases</h2>
-        <p class="subtitle">Upload test cases in plain English, Excel (.xlsx), CSV, or JSON format</p>
 
-        <div class="upload-zone" id="uploadZone">
-          <div class="upload-icon">📁</div>
-          <p>Drag & drop your file here, or <label class="link" for="fileInput">browse</label></p>
-          <p class="upload-hint">Supported: .txt, .csv, .xlsx, .xls, .json, .md &nbsp;|&nbsp; Max 10 MB</p>
-          <input type="file" id="fileInput" accept=".txt,.csv,.xlsx,.xls,.json,.md" hidden />
+      <!-- Page Header -->
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Upload Test Cases</h1>
+          <p class="page-subtitle">Import your test cases — AI will extract endpoints, build assertions, and generate K6 scripts</p>
         </div>
-
-        <div id="uploadResult" class="hidden">
-          <div class="file-info">
-            <span id="uploadFilename" class="badge badge-blue"></span>
-            <span id="uploadSize" class="badge badge-gray"></span>
-            <span id="uploadLines" class="badge badge-gray"></span>
-          </div>
-          <div class="preview-box">
-            <label>Content Preview</label>
-            <pre id="contentPreview"></pre>
-          </div>
-          <div class="actions">
-            <button class="btn btn-primary" id="analyzeBtn">
-              🤖 Analyze with AI
-            </button>
-          </div>
+        <div class="page-header-actions">
+          <a class="btn btn-sm" href="#" id="downloadSampleBtn">⬇ Sample File</a>
         </div>
-
-        <div id="uploadError" class="error-box hidden"></div>
       </div>
 
-      <!-- Paste mode -->
-      <div class="card">
-        <h2>Or Paste Test Cases</h2>
-        <textarea id="pasteArea" placeholder="Paste your test cases here in plain English...
-Example:
-- Test login API with valid credentials, POST to /api/auth/login
-- Test get user profile, GET to /api/users/me with Bearer token
-- Test create order, POST to /api/orders with product details
-" rows="8"></textarea>
-        <div class="actions">
-          <button class="btn btn-primary" id="analyzePasteBtn">🤖 Analyze Pasted Text</button>
+      <!-- Stats Row -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-icon stat-icon-blue">📁</div>
+          <div class="stat-body">
+            <div class="stat-value" id="statUploads">0</div>
+            <div class="stat-label">Files Uploaded</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-icon-purple">🤖</div>
+          <div class="stat-body">
+            <div class="stat-value" id="statTestCases">0</div>
+            <div class="stat-label">Test Cases Found</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-icon-green">📝</div>
+          <div class="stat-body">
+            <div class="stat-value" id="statScripts">0</div>
+            <div class="stat-label">Scripts Generated</div>
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon stat-icon-orange">🚀</div>
+          <div class="stat-body">
+            <div class="stat-value" id="statRuns">0</div>
+            <div class="stat-label">Tests Executed</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Two-column layout -->
+      <div class="upload-layout">
+
+        <!-- Left: Upload + Paste -->
+        <div class="upload-main">
+
+          <!-- Mode switcher -->
+          <div class="mode-tabs">
+            <button class="mode-tab active" data-mode="file">📁 Upload File</button>
+            <button class="mode-tab" data-mode="paste">✏ Paste Text</button>
+          </div>
+
+          <!-- File upload panel -->
+          <div id="modeFile" class="mode-panel">
+            <div class="upload-zone" id="uploadZone">
+              <input type="file" id="fileInput" accept=".txt,.csv,.xlsx,.xls,.json,.md" hidden />
+
+              <!-- Idle state -->
+              <div id="uploadIdle" class="upload-state">
+                <div class="upload-drop-icon">
+                  <div class="drop-circle">
+                    <span class="drop-arrow">⬆</span>
+                  </div>
+                </div>
+                <p class="upload-main-text">Drag & drop your file here</p>
+                <p class="upload-or">— or —</p>
+                <button class="btn btn-primary" id="browseBtn">Browse Files</button>
+                <div class="upload-formats">
+                  <span class="fmt-chip fmt-txt">.txt</span>
+                  <span class="fmt-chip fmt-xlsx">.xlsx</span>
+                  <span class="fmt-chip fmt-csv">.csv</span>
+                  <span class="fmt-chip fmt-json">.json</span>
+                  <span class="fmt-chip fmt-md">.md</span>
+                </div>
+                <p class="upload-limit">Max 10 MB</p>
+              </div>
+
+              <!-- Uploading state -->
+              <div id="uploadProgress" class="upload-state hidden">
+                <div class="upload-progress-icon">⏳</div>
+                <p class="upload-main-text">Uploading...</p>
+                <div class="progress-bar-wrap">
+                  <div class="progress-bar" id="progressBar"></div>
+                </div>
+              </div>
+
+              <!-- Success state -->
+              <div id="uploadSuccess" class="upload-state hidden">
+                <div class="upload-success-icon">✅</div>
+                <p class="upload-main-text" id="uploadedFileName">file.txt</p>
+                <p class="upload-sub-text" id="uploadedFileMeta"></p>
+                <button class="btn btn-sm" id="changeFileBtn">Change File</button>
+              </div>
+            </div>
+
+            <!-- File preview -->
+            <div id="uploadResult" class="file-result hidden">
+              <div class="file-result-header">
+                <div class="file-result-icon" id="fileTypeIcon">📄</div>
+                <div class="file-result-info">
+                  <div class="file-result-name" id="uploadFilename"></div>
+                  <div class="file-result-meta">
+                    <span class="badge badge-gray" id="uploadSize"></span>
+                    <span class="badge badge-gray" id="uploadLines"></span>
+                  </div>
+                </div>
+                <button class="btn btn-primary" id="analyzeBtn">🤖 Analyze with AI →</button>
+              </div>
+              <div class="preview-box">
+                <div class="preview-header">
+                  <span>Content Preview</span>
+                  <span id="previewLineCount" class="preview-count"></span>
+                </div>
+                <pre id="contentPreview"></pre>
+              </div>
+            </div>
+
+            <div id="uploadError" class="error-box hidden"></div>
+          </div>
+
+          <!-- Paste panel -->
+          <div id="modePaste" class="mode-panel hidden">
+            <div class="paste-panel">
+              <div class="paste-header">
+                <span class="paste-hint-icon">💡</span>
+                <span>Write your test cases in plain English — one per line, or in any structured format</span>
+              </div>
+              <textarea id="pasteArea" class="paste-area" placeholder="Examples:
+- Test login endpoint: POST /api/auth/login with { email, password }, expect 200 + JWT token
+- Get user profile: GET /api/users/me with Bearer auth, expect 200 with user object
+- Create order: POST /api/orders with cart items, expect 201 with order ID
+- Load test checkout: 50 virtual users for 2 minutes, POST /api/checkout" rows="12"></textarea>
+              <div class="paste-footer">
+                <div class="char-count">
+                  <span id="charCount">0</span> characters
+                </div>
+                <button class="btn btn-primary btn-large" id="analyzePasteBtn">🤖 Analyze with AI →</button>
+              </div>
+            </div>
+            <div id="pasteError" class="error-box hidden"></div>
+          </div>
+
+        </div>
+
+        <!-- Right: Sidebar panels -->
+        <div class="upload-sidebar">
+
+          <!-- Recent uploads -->
+          <div class="side-card">
+            <div class="side-card-header">
+              <span class="side-card-title">Recent Uploads</span>
+              <button class="btn btn-sm" id="refreshUploadsBtn">↻</button>
+            </div>
+            <div id="recentUploadsList">
+              <div class="empty-state-sm">No uploads yet</div>
+            </div>
+          </div>
+
+          <!-- Supported formats guide -->
+          <div class="side-card">
+            <div class="side-card-header">
+              <span class="side-card-title">Supported Formats</span>
+            </div>
+            <div class="format-list">
+              <div class="format-item">
+                <span class="fmt-icon fmt-txt">TXT</span>
+                <div class="format-desc">
+                  <div class="format-name">Plain Text / Markdown</div>
+                  <div class="format-hint">Natural language test descriptions</div>
+                </div>
+              </div>
+              <div class="format-item">
+                <span class="fmt-icon fmt-xlsx">XLS</span>
+                <div class="format-desc">
+                  <div class="format-name">Excel Spreadsheet</div>
+                  <div class="format-hint">Rows per test case, any column layout</div>
+                </div>
+              </div>
+              <div class="format-item">
+                <span class="fmt-icon fmt-csv">CSV</span>
+                <div class="format-desc">
+                  <div class="format-name">CSV</div>
+                  <div class="format-hint">Comma-separated test case data</div>
+                </div>
+              </div>
+              <div class="format-item">
+                <span class="fmt-icon fmt-json">JSON</span>
+                <div class="format-desc">
+                  <div class="format-name">JSON</div>
+                  <div class="format-hint">Structured test case objects</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pipeline steps guide -->
+          <div class="side-card">
+            <div class="side-card-header">
+              <span class="side-card-title">How It Works</span>
+            </div>
+            <div class="pipeline-steps">
+              <div class="pipeline-step">
+                <div class="pipeline-dot pipeline-dot-active">1</div>
+                <div class="pipeline-step-content">
+                  <div class="pipeline-step-title">Upload</div>
+                  <div class="pipeline-step-desc">Upload or paste your test cases</div>
+                </div>
+              </div>
+              <div class="pipeline-line"></div>
+              <div class="pipeline-step">
+                <div class="pipeline-dot">2</div>
+                <div class="pipeline-step-content">
+                  <div class="pipeline-step-title">AI Analysis</div>
+                  <div class="pipeline-step-desc">Claude extracts API endpoints & load profiles</div>
+                </div>
+              </div>
+              <div class="pipeline-line"></div>
+              <div class="pipeline-step">
+                <div class="pipeline-dot">3</div>
+                <div class="pipeline-step-content">
+                  <div class="pipeline-step-title">Script Generation</div>
+                  <div class="pipeline-step-desc">K6 JavaScript generated with checks & thresholds</div>
+                </div>
+              </div>
+              <div class="pipeline-line"></div>
+              <div class="pipeline-step">
+                <div class="pipeline-dot">4</div>
+                <div class="pipeline-step-content">
+                  <div class="pipeline-step-title">Execute & Monitor</div>
+                  <div class="pipeline-step-desc">Live logs + Grafana metrics dashboard</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </section>
 
     <!-- ====== TAB: ANALYZE ====== -->
     <section id="tab-analyze" class="tab-content">
-      <div class="card">
-        <div class="card-header">
-          <h2>AI Analysis Results</h2>
-          <div id="analyzeStatus" class="status-badge"></div>
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">AI Analysis</h1>
+          <p class="page-subtitle">Extracted test cases from your upload</p>
         </div>
+        <div id="analyzeStatus" class="status-badge"></div>
+      </div>
 
+      <div class="card">
         <div id="analyzingSpinner" class="spinner-wrap hidden">
           <div class="spinner"></div>
           <p>Analyzing test cases with Claude AI...</p>
@@ -123,9 +352,7 @@ Example:
               </div>
             </div>
             <div class="actions">
-              <button class="btn btn-primary btn-large" id="generateBtn">
-                ✨ Generate K6 Script
-              </button>
+              <button class="btn btn-primary btn-large" id="generateBtn">✨ Generate K6 Script</button>
             </div>
           </div>
         </div>
@@ -136,16 +363,19 @@ Example:
 
     <!-- ====== TAB: SCRIPT ====== -->
     <section id="tab-script" class="tab-content">
-      <div class="card">
-        <div class="card-header">
-          <h2>K6 Script</h2>
-          <div class="card-actions">
-            <button class="btn btn-sm" id="copyScriptBtn">📋 Copy</button>
-            <button class="btn btn-sm" id="downloadScriptBtn">⬇ Download</button>
-            <button class="btn btn-sm btn-success" id="saveScriptBtn">💾 Save Changes</button>
-          </div>
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">K6 Script</h1>
+          <p class="page-subtitle">Review, edit, and run your generated load test script</p>
         </div>
+        <div class="page-header-actions">
+          <button class="btn btn-sm" id="copyScriptBtn">📋 Copy</button>
+          <button class="btn btn-sm" id="downloadScriptBtn">⬇ Download</button>
+          <button class="btn btn-sm btn-success" id="saveScriptBtn">💾 Save</button>
+        </div>
+      </div>
 
+      <div class="card">
         <div id="generatingSpinner" class="spinner-wrap hidden">
           <div class="spinner"></div>
           <p>Generating K6 script with Claude AI...</p>
@@ -157,36 +387,35 @@ Example:
             <span id="scriptId" class="badge badge-gray"></span>
           </div>
           <textarea id="scriptEditor" class="code-editor" spellcheck="false"></textarea>
-
           <div class="actions">
             <div class="form-group inline">
               <label>Base URL</label>
               <input type="text" id="executeBaseUrl" placeholder="https://api.myapp.com" />
             </div>
-            <button class="btn btn-primary btn-large" id="executeBtn">
-              🚀 Run K6 Test
-            </button>
+            <button class="btn btn-primary btn-large" id="executeBtn">🚀 Run K6 Test</button>
           </div>
         </div>
+      </div>
 
-        <!-- Saved scripts list -->
-        <div class="card" id="savedScriptsCard">
-          <h3>Saved Scripts</h3>
-          <div id="savedScriptsList">
-            <p class="empty-state">No scripts yet. Generate one from the Analyze tab.</p>
-          </div>
+      <div class="card" id="savedScriptsCard">
+        <h3>Saved Scripts</h3>
+        <div id="savedScriptsList">
+          <p class="empty-state">No scripts yet. Generate one from the Analyze tab.</p>
         </div>
       </div>
     </section>
 
     <!-- ====== TAB: EXECUTE ====== -->
     <section id="tab-execute" class="tab-content">
-      <div class="card">
-        <div class="card-header">
-          <h2>Test Execution</h2>
-          <div id="runStatus" class="status-badge"></div>
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Test Execution</h1>
+          <p class="page-subtitle">Live K6 output stream</p>
         </div>
+        <div id="runStatus" class="status-badge"></div>
+      </div>
 
+      <div class="card">
         <div id="runMeta" class="hidden">
           <div class="run-info">
             <span id="runScriptName" class="badge badge-blue"></span>
@@ -194,30 +423,30 @@ Example:
             <span id="runStartedAt" class="badge badge-gray"></span>
           </div>
         </div>
-
-        <div id="logContainer">
-          <pre id="logOutput" class="log-output">Waiting for test execution...</pre>
-        </div>
-
+        <pre id="logOutput" class="log-output">Waiting for test execution...</pre>
         <div id="runResult" class="hidden">
           <div id="runResultBadge"></div>
-          <a class="btn btn-sm" href="http://localhost:3001" target="_blank">
-            📊 View in Grafana
-          </a>
+          <a class="btn btn-sm" href="http://localhost:3001" target="_blank">📊 View in Grafana</a>
         </div>
       </div>
     </section>
 
     <!-- ====== TAB: HISTORY ====== -->
     <section id="tab-history" class="tab-content">
+      <div class="page-header">
+        <div>
+          <h1 class="page-title">Run History</h1>
+          <p class="page-subtitle">All past test executions</p>
+        </div>
+      </div>
       <div class="card">
-        <h2>Run History</h2>
         <div id="runHistory">
           <p class="empty-state">No runs yet.</p>
         </div>
       </div>
     </section>
-  </main>
+
+  </div><!-- /app-layout -->
 
   <script src="/js/app.js"></script>
 </body>
