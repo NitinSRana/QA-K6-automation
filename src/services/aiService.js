@@ -60,7 +60,14 @@ Rules:
 - Define 'export const options' with realistic load profiles using ramping-vus scenario
 - Add meaningful checks() for each request using the assertions defined
 - Add custom Trend metrics for response times per endpoint
-- Include thresholds in options (http_req_duration p95, http_req_failed rate)
+- Include thresholds in options using EXACTLY this syntax — the metric name comes first,
+  percentile/rate conditions are array values:
+    thresholds: {
+      http_req_duration: ['p(95)<500', 'p(99)<1000'],
+      http_req_failed: ['rate<0.01'],
+    }
+  NEVER use 'p(95)', 'p(99)', or 'avg' as standalone metric names in thresholds.
+  NEVER write { 'p(95)': [...] } — p(95) is an aggregation function, not a metric name.
 - Group related requests with group()
 - Support base URL override: const BASE_URL = __ENV.BASE_URL || 'defaulturl'
 - Add sleep() between requests (0.5-2s) to simulate real user behaviour
