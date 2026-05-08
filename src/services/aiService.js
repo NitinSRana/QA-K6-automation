@@ -55,8 +55,13 @@ const GENERATE_SYSTEM = `You are an expert K6 load testing script developer.
 Generate production-quality K6 JavaScript scripts.
 
 Rules:
+- ALWAYS start the script with these exact imports — never omit any:
+    import http from 'k6/http';
+    import { check, sleep, group } from 'k6';
+    import { Trend, Rate, Counter } from 'k6/metrics';
+  If you use group(), check(), or sleep() they MUST be in the import above.
+  Never reference group, check, or sleep without importing them.
 - Use K6's built-in modules only: k6/http, k6, k6/metrics
-- Include proper imports at the top
 - Define 'export const options' with realistic load profiles using ramping-vus scenario
 - Add meaningful checks() for each request using the assertions defined
 - Add custom Trend metrics for response times per endpoint
