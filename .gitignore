@@ -1,0 +1,11 @@
+node_modules/
+.env
+uploads/
+*.log
+.DS_Store
+
+# Generated K6 scripts and run artifacts
+scripts/generated/
+scripts/results/
+!scripts/generated/.gitkeep
+!scripts/results/.gitkeep

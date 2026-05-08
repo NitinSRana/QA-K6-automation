@@ -1,0 +1,155 @@
+{
+  "id": null,
+  "uid": "k6-overview",
+  "title": "K6 Load Test Overview",
+  "tags": ["k6", "load-test"],
+  "timezone": "browser",
+  "schemaVersion": 38,
+  "version": 1,
+  "refresh": "5s",
+  "time": { "from": "now-30m", "to": "now" },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Virtual Users",
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 0 },
+      "targets": [{
+        "datasource": "InfluxDB-K6",
+        "query": "SELECT last(\"value\") FROM \"vus\" WHERE $timeFilter",
+        "rawQuery": true,
+        "resultFormat": "time_series"
+      }],
+      "options": { "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "blue", "value": null }] } } }
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Requests/sec",
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 0 },
+      "targets": [{
+        "datasource": "InfluxDB-K6",
+        "query": "SELECT mean(\"value\") FROM \"http_reqs\" WHERE $timeFilter GROUP BY time(10s) fill(0)",
+        "rawQuery": true,
+        "resultFormat": "time_series"
+      }],
+      "options": { "colorMode": "background", "graphMode": "area" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }] } } }
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Avg Response Time (ms)",
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 0 },
+      "targets": [{
+        "datasource": "InfluxDB-K6",
+        "query": "SELECT mean(\"value\") FROM \"http_req_duration\" WHERE $timeFilter",
+        "rawQuery": true,
+        "resultFormat": "time_series"
+      }],
+      "options": { "colorMode": "background", "graphMode": "none", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "fieldConfig": { "defaults": { "unit": "ms", "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 500 }, { "color": "red", "value": 1000 }] } } }
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Error Rate",
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 0 },
+      "targets": [{
+        "datasource": "InfluxDB-K6",
+        "query": "SELECT mean(\"value\") FROM \"http_req_failed\" WHERE $timeFilter",
+        "rawQuery": true,
+        "resultFormat": "time_series"
+      }],
+      "options": { "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 0.01 }] } } }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "P95 Response Time",
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 0 },
+      "targets": [{
+        "datasource": "InfluxDB-K6",
+        "query": "SELECT percentile(\"value\", 95) FROM \"http_req_duration\" WHERE $timeFilter",
+        "rawQuery": true,
+        "resultFormat": "time_series"
+      }],
+      "options": { "colorMode": "background", "graphMode": "none" },
+      "fieldConfig": { "defaults": { "unit": "ms", "color": { "mode": "thresholds" }, "thresholds": { "steps": [{ "color": "green", "value": null }, { "color": "yellow", "value": 1000 }, { "color": "red", "value": 2000 }] } } }
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Response Time (ms)",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "targets": [
+        {
+          "datasource": "InfluxDB-K6",
+          "query": "SELECT mean(\"value\") AS \"avg\", percentile(\"value\", 95) AS \"p95\", percentile(\"value\", 99) AS \"p99\" FROM \"http_req_duration\" WHERE $timeFilter GROUP BY time($__interval) fill(previous)",
+          "rawQuery": true,
+          "resultFormat": "time_series"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "ms", "color": { "mode": "palette-classic" } } }
+    },
+    {
+      "id": 7,
+      "type": "timeseries",
+      "title": "Virtual Users & Requests/sec",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "targets": [
+        {
+          "datasource": "InfluxDB-K6",
+          "query": "SELECT mean(\"value\") AS \"vus\" FROM \"vus\" WHERE $timeFilter GROUP BY time($__interval) fill(previous)",
+          "rawQuery": true,
+          "resultFormat": "time_series"
+        },
+        {
+          "datasource": "InfluxDB-K6",
+          "query": "SELECT non_negative_derivative(mean(\"value\"), 1s) AS \"req/s\" FROM \"http_reqs\" WHERE $timeFilter GROUP BY time($__interval) fill(0)",
+          "rawQuery": true,
+          "resultFormat": "time_series"
+        }
+      ],
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" } } }
+    },
+    {
+      "id": 8,
+      "type": "timeseries",
+      "title": "HTTP Status Codes",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 12 },
+      "targets": [
+        {
+          "datasource": "InfluxDB-K6",
+          "query": "SELECT non_negative_derivative(sum(\"value\"), 1s) FROM \"http_reqs\" WHERE $timeFilter GROUP BY time($__interval), \"status\" fill(0)",
+          "rawQuery": true,
+          "resultFormat": "time_series"
+        }
+      ],
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" } } }
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "Data Sent / Received (bytes/s)",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 12 },
+      "targets": [
+        {
+          "datasource": "InfluxDB-K6",
+          "query": "SELECT non_negative_derivative(mean(\"value\"), 1s) AS \"sent\" FROM \"data_sent\" WHERE $timeFilter GROUP BY time($__interval) fill(0)",
+          "rawQuery": true,
+          "resultFormat": "time_series"
+        },
+        {
+          "datasource": "InfluxDB-K6",
+          "query": "SELECT non_negative_derivative(mean(\"value\"), 1s) AS \"received\" FROM \"data_received\" WHERE $timeFilter GROUP BY time($__interval) fill(0)",
+          "rawQuery": true,
+          "resultFormat": "time_series"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "Bps", "color": { "mode": "palette-classic" } } }
+    }
+  ]
+}
