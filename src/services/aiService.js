@@ -81,6 +81,51 @@ Rules:
 - Output ONLY raw JavaScript. No markdown fences, no explanation.`;
 
 /**
+ * Ensure the generated K6 script always has the required imports.
+ * The AI frequently omits one or more imports — this fixes them programmatically.
+ */
+function fixK6Imports(script) {
+  const lines = script.split('\n');
+
+  // Detect what is already imported
+  const hasHttpImport   = lines.some(l => /import\s+http\s+from\s+['"]k6\/http['"]/.test(l));
+  const hasK6Import     = lines.some(l => /import\s*\{[^}]*\}\s*from\s+['"]k6['"]/.test(l));
+  const hasMetricImport = lines.some(l => /import\s*\{[^}]*\}\s*from\s+['"]k6\/metrics['"]/.test(l));
+
+  // Fix k6 named imports — ensure check, sleep, group are all present
+  if (hasK6Import) {
+    script = script.replace(
+      /import\s*\{([^}]*)\}\s*from\s+['"]k6['"]/,
+      (match, names) => {
+        const existing = names.split(',').map(n => n.trim()).filter(Boolean);
+        const required = ['check', 'sleep', 'group'];
+        const merged = [...new Set([...existing, ...required])].join(', ');
+        return `import { ${merged} } from 'k6'`;
+      }
+    );
+  }
+
+  // Build any missing top-level import lines
+  const missing = [];
+  if (!hasHttpImport)   missing.push("import http from 'k6/http';");
+  if (!hasK6Import)     missing.push("import { check, sleep, group } from 'k6';");
+  if (!hasMetricImport) missing.push("import { Trend, Rate, Counter } from 'k6/metrics';");
+
+  if (missing.length > 0) {
+    // Insert before the first existing import, or at the very top
+    const firstImportIdx = lines.findIndex(l => l.trimStart().startsWith('import '));
+    if (firstImportIdx >= 0) {
+      lines.splice(firstImportIdx, 0, ...missing);
+    } else {
+      lines.unshift(...missing);
+    }
+    script = lines.join('\n');
+  }
+
+  return script;
+}
+
+/**
  * Analyze raw test case text and return structured array of test cases.
  */
 async function analyzeTestCases(rawContent, apiKey) {
@@ -131,6 +176,7 @@ async function generateK6Script(testCases, options = {}, apiKey) {
 
   let script = response.choices[0].message.content.trim();
   script = script.replace(/^```(?:javascript|js)?\n?/, '').replace(/\n?```$/, '');
+  script = fixK6Imports(script);
   logger.info('K6 script generated successfully');
   return script;
 }
@@ -169,6 +215,7 @@ async function generateK6ScriptStream(testCases, options = {}, onChunk, apiKey) 
     .replace(/^```(?:javascript|js)?\n?/, '')
     .replace(/\n?```$/, '');
 
+  fullScript = fixK6Imports(fullScript);
   logger.info('K6 script streaming complete');
   return fullScript;
 }
